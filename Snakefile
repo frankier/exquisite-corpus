@@ -23,6 +23,7 @@ from collections import defaultdict
 
 DATA = 'data'
 INCLUDE_TWITTER = "EXCLUDE_TWITTER" not in config
+SCRIPTS = workflow.current_basedir + "/scripts"
 
 SOURCE_LANGUAGES = {
     # OPUS's data files of OpenSubtitles 2018
@@ -675,7 +676,7 @@ rule download_google_1grams:
         for shard in range(nshards):
             url = f'http://storage.googleapis.com/books/ngrams/books/20200217/{source_lang}/1-{shard:>05}-of-{nshards:>05}.gz'
             if not TESTMODE:
-                shell("curl -Lf '{url}' | gunzip -c | awk -f scripts/google-sum-columns.awk >> {output}")
+                shell("curl -Lf '{url}' | gunzip -c | awk -f " + SCRIPTS + "/google-sum-columns.awk >> {output}")
 
 rule download_google_ngrams:
     output:
@@ -849,7 +850,7 @@ rule extract_google_1grams:
     shell:
         # Lowercase the terms, remove part-of-speech tags such as _NOUN, and
         # run the result through the 'countmerge' utility
-        r"LANG=C sort {input} | awk -f scripts/countmerge.awk > {output}"
+        r"LANG=C sort {input} | awk -f " + SCRIPTS + r"/countmerge.awk > {output}"
 
 rule extract_reddit:
     input: find_reddit_filename
@@ -894,7 +895,7 @@ rule monolingual_corpus_en:
     output:
         DATA + "/monolingual/en.txt.gz"
     shell:
-        "zcat {input} | awk -f scripts/language-tag-filter.awk -v lang=en | scripts/imperfect-shuffle-gz.sh {output} monolingual_en"
+        "zcat {input} | awk -f " + SCRIPTS + "/language-tag-filter.awk -v lang=en | " + SCRIPTS + "/imperfect-shuffle-gz.sh {output} monolingual_en"
 
 
 # Get a 1% sample of the corpus, for training a process such as SentencePiece
@@ -1002,7 +1003,7 @@ rule transform_2grams:
     output:
         DATA + "/messy-counts/google-ngrams/2grams-{lang}-{prefix}.txt"
     shell:
-        r"zcat {input} | sed -re 's/_[A-Z.]*//g' | tr A-Z a-z | awk -f scripts/countmerge.awk > {output}"
+        r"zcat {input} | sed -re 's/_[A-Z.]*//g' | tr A-Z a-z | awk -f " + SCRIPTS + r"/countmerge.awk > {output}"
 
 rule transform_3grams:
     input:
@@ -1010,7 +1011,7 @@ rule transform_3grams:
     output:
         DATA + "/messy-counts/google-ngrams/3grams-{lang}-{prefix}.txt"
     shell:
-        r"zcat {input} | sed -re 's/_[A-Z.]*//g' | tr A-Z a-z | awk -f scripts/countmerge.awk > {output}"
+        r"zcat {input} | sed -re 's/_[A-Z.]*//g' | tr A-Z a-z | awk -f " + SCRIPTS + r"/countmerge.awk > {output}"
 
 rule concat_2grams:
     input:
@@ -1019,7 +1020,7 @@ rule concat_2grams:
     output:
         DATA + "/messy-counts/google-ngrams/2grams-combined-en.txt.gz"
     shell:
-        "grep -Eh '[0-9]{{3,}}$' {input} | LANG=C sort | awk -f scripts/countmerge.awk | gzip -c > {output}"
+        "grep -Eh '[0-9]{{3,}}$' {input} | LANG=C sort | awk -f " + SCRIPTS + "/countmerge.awk | gzip -c > {output}"
 
 rule concat_3grams:
     input:
@@ -1028,7 +1029,7 @@ rule concat_3grams:
     output:
         DATA + "/messy-counts/google-ngrams/3grams-combined-en.txt.gz"
     shell:
-        "grep -Eh '[0-9]{{3,}}$' {input} | LANG=C sort | awk -f scripts/countmerge.awk | gzip -c > {output}"
+        "grep -Eh '[0-9]{{3,}}$' {input} | LANG=C sort | awk -f " + SCRIPTS + "/countmerge.awk | gzip -c > {output}"
 
 rule transform_paracrawl:
     # To save computation time, we use fast command-line tools to do as much
@@ -1046,7 +1047,7 @@ rule transform_paracrawl:
     output:
         temp(DATA + "/extracted/paracrawl/pairs/{lang1}_{lang2}.txt")
     shell:
-        "zcat {input} | xml2 | awk -f ./scripts/tmx-language-tagger.awk > {output}"
+        "zcat {input} | xml2 | awk -f " + SCRIPTS + "/tmx-language-tagger.awk > {output}"
 
 
 rule select_paracrawl_language:
@@ -1358,7 +1359,7 @@ rule shuffle_parallel:
     output:
         DATA + "/parallel/shuffled/{lang1}_{lang2}.txt"
     shell:
-        "cat {input} | scripts/imperfect-shuffle.sh {output} parallel_{wildcards.lang1}_{wildcards.lang2}"
+        "cat {input} | " + SCRIPTS + "/imperfect-shuffle.sh {output} parallel_{wildcards.lang1}_{wildcards.lang2}"
 
 
 rule cleanup_parallel:
@@ -1757,7 +1758,7 @@ rule shuffle_full_text:
     output:
         DATA + "/shuffled/{lang}.txt"
     shell:
-        "grep -h '.' {input} | scripts/imperfect-shuffle.sh {output} {wildcards.lang}"
+        "grep -h '.' {input} | " + SCRIPTS + "/imperfect-shuffle.sh {output} {wildcards.lang}"
 
 rule fasttext_skipgrams:
     input:
