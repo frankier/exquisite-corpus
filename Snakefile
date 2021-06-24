@@ -214,7 +214,7 @@ WP_LANGUAGE_MAP = {   # also used for OSCAR
     'fil': 'tl',
     'nb': 'no'
 }
-WP_VERSION = '20210301'
+WP_VERSION = '20210620'
 GOOGLE_LANGUAGE_MAP = {
     'en': 'eng',
     'zh-Hans': 'chi_sim',
