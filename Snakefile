@@ -23,7 +23,14 @@ from collections import defaultdict
 
 DATA = 'data'
 INCLUDE_TWITTER = "EXCLUDE_TWITTER" not in config
+CLEAR_DOWNLOADS = "CLEAR_DOWNLOADS" in config
 SCRIPTS = workflow.current_basedir + "/scripts"
+
+def maybe_temp(*args, **kwargs):
+    if CLEAR_DOWNLOADS:
+        return temp(*args, **kwargs)
+    else:
+        return *args, **kwargs
 
 SOURCE_LANGUAGES = {
     # OPUS's data files of OpenSubtitles 2018
@@ -602,7 +609,7 @@ rule google_3grams:
 
 rule download_opus_monolingual:
     output:
-        DATA + "/downloaded/opus/{dataset}.{lang}.txt.gz"
+        maybe_temp(DATA + "/downloaded/opus/{dataset}.{lang}.txt.gz")
     resources:
         download=1, opusdownload=1
     priority: 0
@@ -615,7 +622,7 @@ rule download_opus_monolingual:
 
 rule download_reddit:
     output:
-        DATA + "/downloaded/reddit/{year}-{month}.{ext}"
+        maybe_temp(DATA + "/downloaded/reddit/{year}-{month}.{ext}")
     resources:
         download=1
     priority: 0
@@ -626,7 +633,7 @@ rule download_reddit:
 
 rule download_opus_parallel:
     output:
-        DATA + "/downloaded/opus/{dataset}.{lang1}_{lang2}.zip"
+        maybe_temp(DATA + "/downloaded/opus/{dataset}.{lang1}_{lang2}.zip")
     resources:
         download=1, opusdownload=1
     run:
@@ -648,7 +655,7 @@ rule download_opus_parallel:
 
 rule download_wikipedia:
     output:
-        DATA + "/downloaded/wikipedia/wikipedia_{lang}.xml.bz2"
+        maybe_temp(DATA + "/downloaded/wikipedia/wikipedia_{lang}.xml.bz2")
     resources:
         download=1, wpdownload=1
     priority: 0
@@ -660,7 +667,7 @@ rule download_wikipedia:
 
 rule download_newscrawl:
     output:
-        DATA + "/downloaded/newscrawl-2014-monolingual.tar.gz"
+        maybe_temp(DATA + "/downloaded/newscrawl-2014-monolingual.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.statmt.org/wmt15/training-monolingual-news-2014.tgz' -O {output}")
@@ -669,7 +676,7 @@ rule download_google_1grams:
     resources:
         download=1
     output:
-        DATA + "/downloaded/google/1grams-{lang}.txt"
+        maybe_temp(DATA + "/downloaded/google/1grams-{lang}.txt")
     run:
         source_lang = GOOGLE_LANGUAGE_MAP.get(wildcards.lang, wildcards.lang)
         nshards = GOOGLE_NUM_1GRAM_SHARDS[wildcards.lang]
@@ -680,7 +687,7 @@ rule download_google_1grams:
 
 rule download_google_ngrams:
     output:
-        DATA + "/downloaded/google-ngrams/{n}grams-{lang}-{shard}.txt.gz"
+        maybe_temp(DATA + "/downloaded/google-ngrams/{n}grams-{lang}-{shard}.txt.gz")
     run:
         source_lang = GOOGLE_LANGUAGE_MAP.get(wildcards.lang, wildcards.lang)
         shard = wildcards.shard
@@ -691,21 +698,21 @@ rule download_google_ngrams:
 
 rule download_amazon_snap:
     output:
-        DATA + "/downloaded/amazon/{category}.json.gz"
+        maybe_temp(DATA + "/downloaded/amazon/{category}.json.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_{wildcards.category}_5.json.gz' -O {output}")
 
 rule download_amazon_acl10:
     output:
-        DATA + "/downloaded/amazon/cls-acl10-unprocessed.tar.gz"
+        maybe_temp(DATA + "/downloaded/amazon/cls-acl10-unprocessed.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.uni-weimar.de/medien/webis/corpora/corpus-webis-cls-10/cls-acl10-unprocessed.tar.gz' -O {output}")
 
 rule download_paracrawl:
     output:
-        DATA + "/downloaded/paracrawl/{lang1}_{lang2}.tmx.gz"
+        maybe_temp(DATA + "/downloaded/paracrawl/{lang1}_{lang2}.tmx.gz")
     run:
         # Put the language codes in ParaCrawl order, with English first
         if wildcards.lang1 == 'en':
@@ -720,7 +727,7 @@ rule download_paracrawl:
 
 rule download_jesc:
     output:
-        DATA + "/downloaded/jesc/raw.tar.gz"
+        maybe_temp(DATA + "/downloaded/jesc/raw.tar.gz")
     run:
         if not TESTMODE:
             shell("curl -Lf 'https://nlp.stanford.edu/projects/jesc/data/raw.tar.gz' -o {output}")
@@ -728,7 +735,7 @@ rule download_jesc:
 
 rule download_jparacrawl:
     output:
-        DATA + "/downloaded/jparacrawl/en-ja.tar.gz"
+        maybe_temp(DATA + "/downloaded/jparacrawl/en-ja.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.kecl.ntt.co.jp/icl/lirg/jparacrawl/release/2.0/bitext/en-ja.tar.gz' -O {output}")
