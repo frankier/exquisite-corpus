@@ -14,6 +14,7 @@ setup(
         'click', 'regex >= 2020.04.04', 'pycld2', 'msgpack-python',
         'ordered-set', 'ftfy', 'subword-nmt', 'sentencepiece==0.1.86', 'mmh3',
         'pytest', 'tqdm', 'lumi-language-id', 'zstandard', 'langcodes[data] >= 2.1',
+        'datasets',
     ],
     zip_safe=False,
     classifiers=[
