@@ -26,11 +26,11 @@ INCLUDE_TWITTER = "EXCLUDE_TWITTER" not in config
 CLEAR_DOWNLOADS = "CLEAR_DOWNLOADS" in config
 SCRIPTS = workflow.current_basedir + "/scripts"
 
-def maybe_temp(*args, **kwargs):
+def maybe_temp(d):
     if CLEAR_DOWNLOADS:
-        return temp(*args, **kwargs)
+        return temp(d)
     else:
-        return *args, **kwargs
+        return d
 
 SOURCE_LANGUAGES = {
     # OPUS's data files of OpenSubtitles 2018
