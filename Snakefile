@@ -822,8 +822,8 @@ rule extract_newscrawl:
     input:
         DATA + "/downloaded/newscrawl-2014-monolingual.tar.gz"
     output:
-        expand(temp(DATA + "/extracted/newscrawl/training-monolingual-news" \
-                         "-2014/news.2014.{lang}.shuffled"), lang=SOURCE_LANGUAGES['newscrawl'])
+        temp(expand(DATA + "/extracted/newscrawl/training-monolingual-news" \
+                         "-2014/news.2014.{lang}.shuffled", lang=SOURCE_LANGUAGES['newscrawl']))
     shell:
         "tar xf {input} -C {DATA}/extracted/newscrawl && touch " \
         "{DATA}/extracted/newscrawl/training-monolingual-news-2014/*"
@@ -842,10 +842,10 @@ rule extract_amazon_acl10:
     input:
         DATA + "/downloaded/amazon/cls-acl10-unprocessed.tar.gz"
     output:
-        expand(temp(DATA + "/extracted/amazon-acl10/cls-acl10-unprocessed/{" \
-                      "lang}/{dataset}.review"),
+        temp(expand(DATA + "/extracted/amazon-acl10/cls-acl10-unprocessed/{" \
+                      "lang}/{dataset}.review",
                lang=AMAZON_ACL_CODES,
-               dataset=AMAZON_ACL_DATASETS)
+               dataset=AMAZON_ACL_DATASETS))
     shell:
         "tar xf {input} -C {DATA}/extracted/amazon-acl10 && touch {output}"
 
