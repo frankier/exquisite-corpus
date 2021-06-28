@@ -25,3 +25,4 @@ RUN git clone https://github.com/LuminosoInsight/wikiparsec && \
 ADD . /exquisite/
 
 RUN pip3 install -e .
+RUN pip3 install -e git+https://github.com/huggingface/datasets.git@fc79f61cbbcfa0e8c68b28c0a8257f17e768a075\#egg=datasets\[streaming\]

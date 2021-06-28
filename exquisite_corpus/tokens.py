@@ -8,6 +8,7 @@ import os
 
 from lumi_language_id import FT_LANGUAGES
 from exquisite_corpus.language_detection import detect_language_checked
+from itertools import islice
 
 
 def tokenize_file(
@@ -42,9 +43,14 @@ def tokenize_oscar(outfile, language):
     if os.environ.get("XC_BUILD_TEST"):
         raise RuntimeError("OSCAR shouldn't be used during tests")
     else:
-        dataset = datasets.load_dataset('oscar', f'unshuffled_deduplicated_{language}')
-        for line in dataset['train'][0:1000000]['text']:
-            line = fix_text(line.strip()).replace('\n', ' ')
+        dataset = datasets.load_dataset(
+            'oscar',
+            f'unshuffled_deduplicated_{language}',
+            split='train',
+            streaming=True
+        )
+        for line in islice(dataset, 1000000):
+            line = fix_text(line['text'].strip()).replace('\n', ' ')
             tokens = tokenize(line, language, include_punctuation=True, external_wordlist=True)
             print(' '.join(tokens), file=outfile)
 
