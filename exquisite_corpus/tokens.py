@@ -18,6 +18,8 @@ def tokenize_file(
     Take in a file of plain text, tokenize it as the given language, and write
     the result as lines of space-separated tokens.
     """
+    if outfile.name != "-":
+        os.makedirs(os.path.dirname(outfile.name), exist_ok=True)
     for line in infile:
         if ftfy:
             # Run all ftfy fixes, but don't let it introduce line breaks
