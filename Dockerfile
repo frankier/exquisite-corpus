@@ -20,7 +20,7 @@ RUN git clone https://github.com/LuminosoInsight/wikiparsec && \
     cd wikiparsec && \
     stack clean && \
     stack build && \
-    stack install
+    stack install --local-bin-path /usr/bin
 
 ADD . /exquisite/
 
