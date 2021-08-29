@@ -24,13 +24,20 @@ from collections import defaultdict
 DATA = 'data'
 INCLUDE_TWITTER = "EXCLUDE_TWITTER" not in config
 CLEAR_DOWNLOADS = "CLEAR_DOWNLOADS" in config
+KEEP_MERGED = "KEEP_MERGED" in config
 SCRIPTS = workflow.current_basedir + "/scripts"
 
-def maybe_temp(d):
+def maybe_temp_download(d):
     if CLEAR_DOWNLOADS:
         return temp(d)
     else:
         return d
+
+def maybe_temp_merged(d):
+    if KEEP_MERGED:
+        return d
+    else:
+        return temp(d)
 
 SOURCE_LANGUAGES = {
     # OPUS's data files of OpenSubtitles 2018
@@ -609,7 +616,7 @@ rule google_3grams:
 
 rule download_opus_monolingual:
     output:
-        maybe_temp(DATA + "/downloaded/opus/{dataset}.{lang}.txt.gz")
+        maybe_temp_download(DATA + "/downloaded/opus/{dataset}.{lang}.txt.gz")
     resources:
         download=1, opusdownload=1
     priority: 0
@@ -622,7 +629,7 @@ rule download_opus_monolingual:
 
 rule download_reddit:
     output:
-        maybe_temp(DATA + "/downloaded/reddit/{year}-{month}.{ext}")
+        maybe_temp_download(DATA + "/downloaded/reddit/{year}-{month}.{ext}")
     resources:
         download=1
     priority: 0
@@ -633,7 +640,7 @@ rule download_reddit:
 
 rule download_opus_parallel:
     output:
-        maybe_temp(DATA + "/downloaded/opus/{dataset}.{lang1}_{lang2}.zip")
+        maybe_temp_download(DATA + "/downloaded/opus/{dataset}.{lang1}_{lang2}.zip")
     resources:
         download=1, opusdownload=1
     run:
@@ -655,7 +662,7 @@ rule download_opus_parallel:
 
 rule download_wikipedia:
     output:
-        maybe_temp(DATA + "/downloaded/wikipedia/wikipedia_{lang}.xml.bz2")
+        maybe_temp_download(DATA + "/downloaded/wikipedia/wikipedia_{lang}.xml.bz2")
     resources:
         download=1, wpdownload=1
     priority: 0
@@ -667,7 +674,7 @@ rule download_wikipedia:
 
 rule download_newscrawl:
     output:
-        maybe_temp(DATA + "/downloaded/newscrawl-2014-monolingual.tar.gz")
+        maybe_temp_download(DATA + "/downloaded/newscrawl-2014-monolingual.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.statmt.org/wmt15/training-monolingual-news-2014.tgz' -O {output}")
@@ -676,7 +683,7 @@ rule download_google_1grams:
     resources:
         download=1
     output:
-        maybe_temp(DATA + "/downloaded/google/1grams-{lang}.txt")
+        maybe_temp_download(DATA + "/downloaded/google/1grams-{lang}.txt")
     run:
         source_lang = GOOGLE_LANGUAGE_MAP.get(wildcards.lang, wildcards.lang)
         nshards = GOOGLE_NUM_1GRAM_SHARDS[wildcards.lang]
@@ -687,7 +694,7 @@ rule download_google_1grams:
 
 rule download_google_ngrams:
     output:
-        maybe_temp(DATA + "/downloaded/google-ngrams/{n}grams-{lang}-{shard}.txt.gz")
+        maybe_temp_download(DATA + "/downloaded/google-ngrams/{n}grams-{lang}-{shard}.txt.gz")
     run:
         source_lang = GOOGLE_LANGUAGE_MAP.get(wildcards.lang, wildcards.lang)
         shard = wildcards.shard
@@ -698,21 +705,21 @@ rule download_google_ngrams:
 
 rule download_amazon_snap:
     output:
-        maybe_temp(DATA + "/downloaded/amazon/{category}.json.gz")
+        maybe_temp_download(DATA + "/downloaded/amazon/{category}.json.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_{wildcards.category}_5.json.gz' -O {output}")
 
 rule download_amazon_acl10:
     output:
-        maybe_temp(DATA + "/downloaded/amazon/cls-acl10-unprocessed.tar.gz")
+        maybe_temp_download(DATA + "/downloaded/amazon/cls-acl10-unprocessed.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.uni-weimar.de/medien/webis/corpora/corpus-webis-cls-10/cls-acl10-unprocessed.tar.gz' -O {output}")
 
 rule download_paracrawl:
     output:
-        maybe_temp(DATA + "/downloaded/paracrawl/{lang1}_{lang2}.tmx.gz")
+        maybe_temp_download(DATA + "/downloaded/paracrawl/{lang1}_{lang2}.tmx.gz")
     run:
         # Put the language codes in ParaCrawl order, with English first
         if wildcards.lang1 == 'en':
@@ -727,7 +734,7 @@ rule download_paracrawl:
 
 rule download_jesc:
     output:
-        maybe_temp(DATA + "/downloaded/jesc/raw.tar.gz")
+        maybe_temp_download(DATA + "/downloaded/jesc/raw.tar.gz")
     run:
         if not TESTMODE:
             shell("curl -Lf 'https://nlp.stanford.edu/projects/jesc/data/raw.tar.gz' -o {output}")
@@ -735,7 +742,7 @@ rule download_jesc:
 
 rule download_jparacrawl:
     output:
-        maybe_temp(DATA + "/downloaded/jparacrawl/en-ja.tar.gz")
+        maybe_temp_download(DATA + "/downloaded/jparacrawl/en-ja.tar.gz")
     run:
         if not TESTMODE:
             shell("wget 'http://www.kecl.ntt.co.jp/icl/lirg/jparacrawl/release/2.0/bitext/en-ja.tar.gz' -O {output}")
@@ -1634,7 +1641,7 @@ rule merge_reddit:
     input:
         expand(DATA + "/counts/reddit/{date}/{{lang}}.txt", date=REDDIT_SHARDS)
     output:
-        DATA + "/counts/reddit/merged/{lang}.txt"
+        maybe_temp_merged(DATA + "/counts/reddit/merged/{lang}.txt")
     shell:
         "cat {input} | xc recount - {output} -l {wildcards.lang}"
 
